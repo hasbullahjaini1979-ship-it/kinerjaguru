@@ -1382,7 +1382,7 @@ textarea.inp{resize:vertical;min-height:74px}
 const A=(()=>{
 'use strict';
 const SHEET_ID='1bUsyRxXjg5hjXE1q_-9JiLA42iYdki0LdUgRUnlkPNM';
-const GAS_URL='https://script.google.com/macros/s/AKfycbwYYXoNa735xDmtIubTBrl2_teOwJZuxbwLIi_bo56m983S13taKiNQmhRhDnIegYSY/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbwyOwjqwvzzzvPHiYfrtt-T-J-JvIa1gTXyBNt0v_y82KbwUC6l-bD8YBeZoTJLEzyx/exec';
 
 let DB={
   sekolah:{nama:'',alamat:'',kasek:'',kasekNip:'',logo:''},
@@ -2117,7 +2117,7 @@ function renderAdmin(){
   renderTicker();
   renderTblGuru();renderTblInd();renderTblDed();renderKatPills();renderKatSelects();
   const gopts=DB.guru.map((g,i)=>`<option value="${i}">${g.nama}</option>`).join('');
-  const fLG=$('fLGuru');if(fLG)fLG.innerHTML='<option value="">— Pilih Guru —</option>'+gopts;
+  const fLG=$('fLGuru');if(fLG){const keep=fLG.value;fLG.innerHTML='<option value="">— Pilih Guru —</option>'+gopts;fLG.value=keep;}
 }
 function renderTblGuru(){
   const tb=$('tblGuru');if(!tb)return;
@@ -2155,7 +2155,13 @@ function resetDed(){['fDInd','fDPoin'].forEach(id=>sv(id,''));sv('fDIdx',-1);con
 /* ── LAPORAN ── */
 function buildLapHTML(g,a,z){
   const s=DB.sekolah;
-  const logs=DB.logs.filter(l=>l.nip===g.nip&&l.tgl>=a&&l.tgl<=z).sort((a,b)=>a.tgl.localeCompare(b.tgl));
+  const adaRentang=(a!=='1900-01-01'||z!=='2100-12-31');
+  const logs=DB.logs.filter(l=>{
+    if(String(l.nip||'').trim()!==String(g.nip||'').trim())return false;
+    if(!adaRentang)return true; /* tanpa rentang tanggal: tampilkan SEMUA log, sama seperti Rekap Poin */
+    const t=normTgl(l.tgl);
+    return /^\d{4}-\d{2}-\d{2}$/.test(t)&&t>=a&&t<=z;
+  }).sort((x,y)=>String(x.tgl||'').localeCompare(String(y.tgl||'')));
   const dl=logs.filter(l=>l.tipe==='D'),pl=logs.filter(l=>l.tipe==='P');
   const totD=dl.reduce((s,l)=>s+l.poin,0),totP=pl.reduce((s,l)=>s+l.poin,0);
   const sc=totD-totP;const [rec]=pred(sc);
